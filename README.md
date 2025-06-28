@@ -6,3 +6,10 @@ EchoFilter is a browser extension and web-based email filter built to protect us
 When a user opens an email, EchoFilter immediately scans it for scam indicators using simple rule-based checks (e.g., does the link text match the actual URL? Is the domain recently registered? Does the body contain scam phrases?). If anything suspicious is found, the inline warning banner is shown automatically.
 When the user interacts with links, tooltips provide real-time insight into where the link really leads. If the user wants more information, clicking “View Details” expands the warning into a full breakdown of red flags.
 The extension icon popup acts as a central command center for recent alerts, keeping the user informed of threats without cluttering the inbox.
+
+
+
+
+
+
+
