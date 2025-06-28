@@ -33,8 +33,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Update button styles based on state
   function updateButtons() {
-    btnLinkCheck.classList.toggle('active', !linkCheckEnabled);
-    btnLangDetect.classList.toggle('active', !langDetectEnabled);
+    btnLinkCheck.classList.toggle('active', linkCheckEnabled);
+    btnLangDetect.classList.toggle('active', langDetectEnabled);
     btnTrustSenders.classList.toggle('active', trustSendersEnabled);
   }
 
