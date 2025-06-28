@@ -89,12 +89,20 @@ document.addEventListener('DOMContentLoaded', () => {
     updateButtons();
     loadAlerts();
   });
+<<<<<<< HEAD
   
   // Optional: Listen for messages (you can remove this if unused)
   chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     if (msg.type === 'updateAlerts') {
       loadAlerts();
       sendResponse({ status: 'alerts updated' });
+=======
+
+  chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName === 'local' && changes.alerts) {
+      console.log("[EchoFilter Popup] Alerts storage changed. Reloading alerts.");
+      loadAlerts(); // Vuelve a cargar las alertas cuando se detecta un cambio
+>>>>>>> 573af91460e514f020e053a13390e272750cff00
     }
   });
 });
