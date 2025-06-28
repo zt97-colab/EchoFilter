@@ -55,7 +55,9 @@ function scanAndInjectWarnings() {
             const text = link.innerText;
             const href = link.getAttribute('href');
             if (href && !href.includes(text) && text.length > 2) {
-              flagged.push("Suspicious link: " + href);
+              if (!flagged.includes("Suspicious link detected")) {
+                flagged.push("Suspicious link detected");
+              }
               link.title = `⚠️ Link text doesn't match: ${href}`;
               link.style.borderBottom = "1px dashed red";
             }
@@ -76,12 +78,24 @@ function scanAndInjectWarnings() {
             font-family: Roboto, sans-serif; color: #856404; border: 3px solid #ffcc00;
             display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
           `;
+
+          // Explanations for each flag
+          const reasons = {
+            "Urgent language": "This email uses urgent or alarming language, which is common in scams.",
+            "Suspicious keywords": "This email contains keywords often used in phishing or scam attempts.",
+            "Scam phrases": "This email contains phrases frequently found in scams.",
+            "Suspicious link detected": "This email contains links where the text does not match the actual URL, which is a common phishing tactic."
+          };
+
           warning.innerHTML = `
             <div style="font-size: 18px; font-weight: 700; margin-bottom: 12px;">
               ⚠️ This message was hidden due to:
             </div>
             <div style="font-size: 16px; margin-bottom: 20px;">
               <b>${flagged.join(", ")}</b>
+            </div>
+            <div style="font-size: 14px; color: #555; margin-bottom: 20px; text-align: left; max-width: 400px;">
+              ${flagged.map(f => `<div>• <b>${f}:</b> ${reasons[f] || ""}</div>`).join("")}
             </div>
             <button id="ef-show-btn" style="
               background: #2b7a78; border: none; padding: 12px 25px;
