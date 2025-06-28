@@ -20,18 +20,27 @@ function scanAndInjectWarnings() {
     background: #e0e0e0; color: #333; font-size: 18px; font-weight: 500;
     padding: 18px; border-radius: 8px; margin: 20px auto; text-align: center;
     max-width: 400px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    position: relative; z-index: 999999;
   `;
   checking.innerText = "🔎 EchoFilter: Checking this email for threats...";
   main.prepend(checking);
 
   setTimeout(() => {
     chrome.storage.local.get(
-      ['linkCheckEnabled', 'langDetectEnabled', 'trustSendersEnabled'],
-      ({ linkCheckEnabled = true, langDetectEnabled = true }) => {
-        const bodyText = document.body.innerText;
-        let sender = document.querySelector('[email], .gD, .go')?.innerText || document.title || "Unknown";
-        const subject = document.querySelector('h2')?.innerText || "(No Subject)";
+      ['linkCheckEnabled', 'langDetectEnabled', 'trustSendersEnabled', 'trustedSenders'],
+      ({ linkCheckEnabled = true, langDetectEnabled = true, trustSendersEnabled = false, trustedSenders = [] }) => {
+        const bodyText = main.innerText;
+        let sender = senderEl.innerText || document.title || "Unknown";
+        const subject = subjectEl.innerText || "(No Subject)";
         const flagged = [];
+
+        // Trust known senders logic
+        if (trustSendersEnabled && trustedSenders.includes(sender)) {
+          // Remove checking banner and skip scan
+          const checkingBanner = document.getElementById('ef-checking');
+          if (checkingBanner) checkingBanner.remove();
+          return;
+        }
 
         if (langDetectEnabled) {
           [
@@ -42,7 +51,7 @@ function scanAndInjectWarnings() {
         }
 
         if (linkCheckEnabled) {
-          document.querySelectorAll('a').forEach(link => {
+          main.querySelectorAll('a').forEach(link => {
             const text = link.innerText;
             const href = link.getAttribute('href');
             if (href && !href.includes(text) && text.length > 2) {
@@ -58,12 +67,12 @@ function scanAndInjectWarnings() {
         if (checkingBanner) checkingBanner.remove();
 
         if (flagged.length) {
-          // Show warning overlay
+          // Overlay warning (do NOT clear main.innerHTML)
           const warning = document.createElement('div');
           warning.id = 'ef-warning';
           warning.style.cssText = `
-            background: white; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            overflow: auto; padding: 25px; z-index: 999999;
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.98); z-index: 999999;
             font-family: Roboto, sans-serif; color: #856404; border: 3px solid #ffcc00;
             display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
           `;
@@ -80,11 +89,10 @@ function scanAndInjectWarnings() {
               cursor: pointer; user-select: none;
             ">See It Anyway</button>
           `;
-          main.innerHTML = '';
-          main.appendChild(warning);
+          document.body.appendChild(warning);
 
           document.getElementById('ef-show-btn').onclick = () => {
-            location.reload(); // Reload to restore original content
+            warning.remove();
           };
 
           // Log to storage for popup
@@ -101,6 +109,7 @@ function scanAndInjectWarnings() {
             background: #e6ffe6; color: #256029; font-size: 18px; font-weight: 500;
             padding: 18px; border-radius: 8px; margin: 20px auto; text-align: center;
             max-width: 400px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            position: relative; z-index: 999999;
           `;
           safe.innerText = "✅ EchoFilter: No threats detected in this email.";
           main.prepend(safe);
