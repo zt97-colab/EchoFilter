@@ -69,3 +69,33 @@ function scanAndInjectWarnings() {
     }
   );
 }
+
+console.log("[EchoFilter] Content script loaded");
+
+function observeGmailChanges() {
+  const target = document.querySelector('div[role="main"]');
+  if (!target) {
+    console.warn("[EchoFilter] Gmail main view not found.");
+    return;
+  }
+
+  const observer = new MutationObserver(() => {
+    const emailBody = target.innerText || "";
+    if (emailBody.length > 20) {
+      console.log("[EchoFilter] Email view changed — running scan");
+      scanAndInjectWarnings();
+    }
+  });
+
+  observer.observe(target, {
+    childList: true,
+    subtree: true,
+  });
+
+  console.log("[EchoFilter] Gmail observer started");
+}
+
+window.addEventListener("load", () => {
+  console.log("[EchoFilter] Waiting to observe Gmail content...");
+  setTimeout(observeGmailChanges, 3000); // Give Gmail time to fully load
+});
