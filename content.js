@@ -5,6 +5,14 @@ function scanAndInjectWarnings() {
   const main = document.querySelector('div[role="main"]');
   if (!main) return;
 
+  // Only scan if an email is open (subject and sender exist)
+  const subjectEl = main.querySelector('h2');
+  const senderEl = main.querySelector('[email], .gD, .go');
+  if (!subjectEl || !senderEl) {
+    // Not an email view, do not scan or inject banners
+    return;
+  }
+
   // Show "Checking..." banner
   const checking = document.createElement('div');
   checking.id = 'ef-checking';
@@ -108,7 +116,10 @@ function observeGmailChanges() {
   if (!target) return;
   const observer = new MutationObserver(() => {
     const emailBody = target.innerText || "";
-    if (emailBody.length > 20) scanAndInjectWarnings();
+    if (emailBody.length > 20) {
+      removeEchoFilterBanners();
+      scanAndInjectWarnings();
+    }
   });
   observer.observe(target, { childList: true, subtree: true });
 }
@@ -131,3 +142,10 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     scanAndInjectWarnings();
   }
 });
+
+function removeEchoFilterBanners() {
+  ['ef-warning', 'ef-safe', 'ef-checking'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+  });
+}
