@@ -13,4 +13,3 @@ The extension icon popup acts as a central command center for recent alerts, kee
 
 
 
-
