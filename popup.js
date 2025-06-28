@@ -33,8 +33,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Update button styles based on state
   function updateButtons() {
-    btnLinkCheck.classList.toggle('active', linkCheckEnabled);
-    btnLangDetect.classList.toggle('active', langDetectEnabled);
+    btnLinkCheck.classList.toggle('active', !linkCheckEnabled);
+    btnLangDetect.classList.toggle('active', !langDetectEnabled);
     btnTrustSenders.classList.toggle('active', trustSendersEnabled);
   }
 
@@ -88,12 +88,5 @@ document.addEventListener('DOMContentLoaded', () => {
     trustSendersEnabled = data.trustSendersEnabled;
     updateButtons();
     loadAlerts();
-  });
-
-  chrome.storage.onChanged.addListener((changes, areaName) => {
-    if (areaName === 'local' && changes.alerts) {
-      console.log("[EchoFilter Popup] Alerts storage changed. Reloading alerts.");
-      loadAlerts(); // Vuelve a cargar las alertas cuando se detecta un cambio
-    }
   });
 });
