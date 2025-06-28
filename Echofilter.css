@@ -1,0 +1,107 @@
+body {
+    font-family: 'Roboto', sans-serif;
+    max-width: 600px;
+    margin: 20px auto;
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 0 5px #ccc;
+  }
+  
+  #email-container h2 {
+    font-weight: 600;
+  }
+  
+  .warning-banner {
+    background-color: #fff3cd;
+    border-left: 5px solid #ffcc00;
+    padding: 10px;
+    margin: 10px 0;
+    color: #856404;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+  }
+  
+  .warning-banner.red {
+    background-color: #f8d7da;
+    border-left-color: #dc3545;
+    color: #721c24;
+  }
+  
+  .warning-banner button {
+    background: transparent;
+    border: 1px solid currentColor;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+  
+  .hidden {
+    display: none;
+  }
+  
+  .placeholder {
+    background: white;
+    border: 1px solid #ddd;
+    color: #999;
+    padding: 20px;
+    font-style: italic;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+
+  .echofilter-warning-banner {
+    font-family: 'Roboto', sans-serif;
+    background-color: #fff3cd;
+    border-left: 5px solid #ffcc00;
+    padding: 10px;
+    margin: 10px 0;
+    color: #856404;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .echofilter-warning-banner.red {
+    background-color: #f8d7da;
+    border-left-color: #dc3545;
+    color: #721c24;
+  }
+  
+  .echofilter-warning-banner button {
+    margin-top: 10px;
+    background: transparent;
+    border: 1px solid currentColor;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-weight: 600;
+    width: 120px;
+  }
+  
+  .echofilter-placeholder {
+    background: white;
+    border: 1px solid #ddd;
+    color: #999;
+    padding: 20px;
+    font-style: italic;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  
+  .echofilter-tooltip {
+    position: absolute;
+    background-color: #333;
+    color: white;
+    padding: 5px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 9999;
+  }
+  
+  
