@@ -1,6 +1,9 @@
 let lastScannedEmailContentSignature = null;
+let emailRevealed = false;  // <-- Add this global flag to track if user clicked "See It Anyway"
 
 function scanAndInjectWarnings() {
+  if (emailRevealed) return; // Don't block again if user revealed email
+
   // Prevent double injection
   if (document.getElementById('ef-warning') || document.getElementById('ef-checking')) return;
 
@@ -24,6 +27,7 @@ function scanAndInjectWarnings() {
     max-width: 400px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     position: relative; z-index: 999999;
   `;
+  main.prepend(checking);  // <-- You missed adding this to DOM before timeout
 
   setTimeout(() => {
     try {
@@ -37,7 +41,6 @@ function scanAndInjectWarnings() {
 
           // Trust known senders logic
           if (trustSendersEnabled && trustedSenders.includes(sender)) {
-            // Remove checking banner and skip scan
             const checkingBanner = document.getElementById('ef-checking');
             if (checkingBanner) checkingBanner.remove();
             return;
@@ -107,7 +110,9 @@ function scanAndInjectWarnings() {
             `;
             document.body.appendChild(warning);
 
+            // IMPORTANT: Set global flag when user clicks "See It Anyway"
             document.getElementById('ef-show-btn').onclick = () => {
+              emailRevealed = true;   // <-- Remember user revealed the email
               warning.remove();
             };
 
@@ -141,7 +146,6 @@ function scanAndInjectWarnings() {
   }, 500); // Simulate scan delay
 }
 
-
 function observeGmailChanges() {
   const target = document.querySelector('div[role="main"]');
   if (!target) return;
@@ -156,20 +160,22 @@ function observeGmailChanges() {
                                      currentSenderEl.innerText + "::" +
                                      currentBodyTextSample;
 
+      // Reset reveal flag if email changed!
       if (currentContentSignature !== lastScannedEmailContentSignature) {
         lastScannedEmailContentSignature = currentContentSignature;
+        emailRevealed = false;  // <-- Reset reveal when user switches emails!
         removeEchoFilterBanners();
         scanAndInjectWarnings();
       }
     } else {
       removeEchoFilterBanners();
       lastScannedEmailContentSignature = null;
+      emailRevealed = false;  // Reset reveal if no email open
     }
   });
 
   observer.observe(target, { childList: true, subtree: true });
 }
-
 
 window.addEventListener("load", () => {
   setTimeout(() => {
@@ -178,7 +184,6 @@ window.addEventListener("load", () => {
   }, 2000);
 });
 
-
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type === 'settingsUpdated') {
     console.log("[EchoFilter] Settings updated. Re-scanning email with new settings...");
@@ -186,7 +191,6 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     scanAndInjectWarnings();
   }
 });
-
 
 function removeEchoFilterBanners() {
   ['ef-warning', 'ef-safe', 'ef-checking'].forEach(id => {
