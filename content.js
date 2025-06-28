@@ -89,7 +89,7 @@ function scanAndInjectWarnings() {
 
           warning.innerHTML = `
             <div style="font-size: 18px; font-weight: 700; margin-bottom: 12px;">
-              ⚠️ This message was hidden due to:
+              ⚠️ This message was blocked by EchoFilter
             </div>
             <div style="font-size: 16px; margin-bottom: 20px;">
               <b>${flagged.join(", ")}</b>
@@ -134,34 +134,38 @@ function scanAndInjectWarnings() {
   }, 500); // Simulate scan delay
 }
 
+console.log("[EchoFilter] Content script loaded");
+
 function observeGmailChanges() {
   const target = document.querySelector('div[role="main"]');
-  if (!target) return;
+  if (!target) {
+    console.warn("[EchoFilter] Gmail main view not found.");
+    return;
+  }
+
   const observer = new MutationObserver(() => {
-    const emailBody = target.innerText || "";
-    if (emailBody.length > 20) {
-      removeEchoFilterBanners();
-      scanAndInjectWarnings();
-    }
+    removeEchoFilterBanners();
+    scanAndInjectWarnings();
   });
-  observer.observe(target, { childList: true, subtree: true });
+
+  observer.observe(target, {
+    childList: true,
+    subtree: true,
+  });
+
+  // Run once immediately in case an email is already open
+  removeEchoFilterBanners();
+  scanAndInjectWarnings();
 }
 
 window.addEventListener("load", () => {
-  setTimeout(observeGmailChanges, 3000);
+  console.log("[EchoFilter] Waiting to observe Gmail content...");
+  setTimeout(observeGmailChanges, 1000); // shorter delay for faster response
 });
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type === 'settingsUpdated') {
-    console.log("[EchoFilter] Settings updated. Re-scanning email with new settings...");
-    
-    const existingWarning = document.getElementById('ef-warning');
-    if (existingWarning) existingWarning.remove();
-    const existingChecking = document.getElementById('ef-checking');
-    if (existingChecking) existingChecking.remove();
-    const existingSafe = document.getElementById('ef-safe');
-    if (existingSafe) existingSafe.remove();
-
+    removeEchoFilterBanners();
     scanAndInjectWarnings();
   }
 });
