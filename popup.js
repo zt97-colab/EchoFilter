@@ -1,3 +1,4 @@
+
 document.addEventListener('DOMContentLoaded', () => {
   const alertsDiv = document.getElementById('alerts');
   const btnLinkCheck = document.getElementById('btnLinkCheck');
