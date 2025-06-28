@@ -1,0 +1,24 @@
+// FILE: popup.html
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Inter, sans-serif; width: 300px; padding: 10px; }
+    .email { border-bottom: 1px solid #ddd; margin-bottom: 10px; }
+    .email h4 { margin: 0 0 5px; }
+    .red { color: red; }
+    .yellow { color: orange; }
+  </style>
+</head>
+<body>
+  <h3>⚠️ EchoFilter Alerts</h3>
+  <div id="alerts"></div>
+  <h4>Settings</h4>
+  <label><input type="checkbox" id="toggleLinks" checked> Enable link checking</label><br>
+  <label><input type="checkbox" id="toggleLang" checked> Enable scam language detection</label><br>
+  <label><input type="checkbox" id="toggleWhitelist"> Trust known senders</label>
+
+  <script src="popup.js"></script>
+</body>
+</html>
+

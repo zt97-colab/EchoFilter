@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "EchoFilter",
+  "version": "1.0",
+  "description": "Hide scammy emails and protect users from phishing",
+  "permissions": ["storage", "scripting", "activeTab"],
+  "host_permissions": ["*://mail.google.com/*"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://mail.google.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}
