@@ -116,3 +116,18 @@ function observeGmailChanges() {
 window.addEventListener("load", () => {
   setTimeout(observeGmailChanges, 3000);
 });
+
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg.type === 'settingsUpdated') {
+    console.log("[EchoFilter] Settings updated. Re-scanning email with new settings...");
+    
+    const existingWarning = document.getElementById('ef-warning');
+    if (existingWarning) existingWarning.remove();
+    const existingChecking = document.getElementById('ef-checking');
+    if (existingChecking) existingChecking.remove();
+    const existingSafe = document.getElementById('ef-safe');
+    if (existingSafe) existingSafe.remove();
+
+    scanAndInjectWarnings();
+  }
+});

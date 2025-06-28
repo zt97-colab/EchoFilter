@@ -89,4 +89,11 @@ document.addEventListener('DOMContentLoaded', () => {
     updateButtons();
     loadAlerts();
   });
+
+  chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName === 'local' && changes.alerts) {
+      console.log("[EchoFilter Popup] Alerts storage changed. Reloading alerts.");
+      loadAlerts(); // Vuelve a cargar las alertas cuando se detecta un cambio
+    }
+  });
 });
