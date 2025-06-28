@@ -1,63 +1,111 @@
 function scanAndInjectWarnings() {
-  chrome.storage.local.get(['settings'], ({ settings }) => {
-    const langCheck = settings?.langCheck ?? true;
-    const linkCheck = settings?.linkCheck ?? true;
+  // 🧠 BONUS: Prevent double injection
+  if (document.getElementById('ef-warning')) {
+    console.log("[EchoFilter] Warning already shown — skipping");
+    return;
+  }
 
-    const emailBody = document.body.innerText;
-    const sender = document.querySelector('[email], .gD, .go')?.innerText || "Unknown";
-    const subject = document.querySelector('h2')?.innerText || "(No Subject)";
-    const flagged = [];
+  chrome.storage.local.get(
+    ['linkCheckEnabled', 'langDetectEnabled', 'trustSendersEnabled'],
+    ({ linkCheckEnabled = true, langDetectEnabled = true }) => {
+      const bodyText = document.body.innerText;
+      // 🛠️ FIX #2: Log sender for debugging, fallback to document.title
+      let sender = document.querySelector('[email], .gD, .go')?.innerText || document.title || "Unknown";
+      console.log("[EchoFilter] Sender:", sender);
+      const subject = document.querySelector('h2')?.innerText || "(No Subject)";
+      const flagged = [];
 
-    if (langCheck) {
-      const redFlags = [
-        { pattern: /account locked|urgent/i, reason: "Urgent language" },
-        { pattern: /http.*@|fake|bonus/i, reason: "Suspicious keywords" },
-        { pattern: /free bitcoin|payment issue/i, reason: "Scam phrases" },
-      ];
+      if (langDetectEnabled) {
+        [
+          { p: /account locked|urgent/i, r: "Urgent language" },
+          { p: /http.*@|fake|bonus/i, r: "Suspicious keywords" },
+          { p: /free bitcoin|payment issue/i, r: "Scam phrases" },
+        ].forEach(({ p, r }) => p.test(bodyText) && flagged.push(r));
+      }
 
-      redFlags.forEach(({ pattern, reason }) => {
-        if (pattern.test(emailBody)) flagged.push(reason);
-      });
+      // 🛠️ FIX #1: Only inject into Gmail's main content, not body
+      if (flagged.length && !document.getElementById('ef-warning')) {
+        const main = document.querySelector('div[role="main"]');
+        if (!main) return;
+
+        const original = main.cloneNode(true);
+        const warning = document.createElement('div');
+        warning.id = 'ef-warning';
+        warning.style.cssText = `
+          background: white; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+          overflow: auto; padding: 25px; z-index: 999999;
+          font-family: Roboto, sans-serif; color: #856404; border: 3px solid #ffcc00;
+          display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
+        `;
+
+        warning.innerHTML = `
+          <div style="font-size: 18px; font-weight: 700; margin-bottom: 12px;">
+            ⚠️ This message was hidden due to:
+          </div>
+          <div style="font-size: 16px; margin-bottom: 20px;">
+            <b>${flagged.join(", ")}</b>
+          </div>
+          <button id="ef-show-btn" style="
+            background: #2b7a78; border: none; padding: 12px 25px;
+            color: white; font-size: 16px; border-radius: 8px;
+            cursor: pointer; user-select: none;
+          ">See It Anyway</button>
+        `;
+
+        main.innerHTML = '';
+        main.appendChild(warning);
+
+        document.getElementById('ef-show-btn').onclick = () => {
+          main.innerHTML = '';
+          main.appendChild(original);
+        };
+
+        chrome.runtime.sendMessage({
+          action: 'logThreat',
+          data: { subject, sender, reason: flagged.join(', '), threatLevel: 'red' }
+        });
+      }
+
+      if (linkCheckEnabled) {
+        document.querySelectorAll('a').forEach(link => {
+          const text = link.innerText;
+          const href = link.getAttribute('href');
+          if (href && !href.includes(text) && text.length > 2) {
+            link.title = `⚠️ Link text doesn't match: ${href}`;
+            link.style.borderBottom = "1px dashed red";
+          }
+        });
+      }
     }
+  );
+}
 
-    if (flagged.length) {
-      const warning = document.createElement("div");
-      warning.innerHTML = `
-        <div style="background:#fff3cd; color:#856404; border:1px solid #ffeeba; padding:10px; margin:10px 0; font-family:Roboto">
-          ⚠️ This message was hidden due to: <b>${flagged.join(", ")}</b><br>
-          <button id="ef-show" style="margin-top:5px">See Anyway</button>
-        </div>
-      `;
-      const container = document.body;
-      const original = container.cloneNode(true);
-      container.innerHTML = "";
-      container.appendChild(warning);
+console.log("[EchoFilter] Content script loaded");
 
-      document.getElementById("ef-show").onclick = () => {
-        container.innerHTML = "";
-        container.appendChild(original);
-      };
+function observeGmailChanges() {
+  const target = document.querySelector('div[role="main"]');
+  if (!target) {
+    console.warn("[EchoFilter] Gmail main view not found.");
+    return;
+  }
 
-      chrome.runtime.sendMessage({
-        action: 'logThreat',
-        data: {
-          subject,
-          sender,
-          reason: flagged.join(', '),
-          threatLevel: 'red'
-        }
-      });
-    }
-
-    if (linkCheck) {
-      document.querySelectorAll('a').forEach((link) => {
-        const display = link.innerText;
-        const href = link.getAttribute('href');
-        if (href && !href.includes(display) && display.length > 2) {
-          link.setAttribute('title', `⚠️ Link text doesn't match: ${href}`);
-          link.style.borderBottom = "1px dashed red";
-        }
-      });
+  const observer = new MutationObserver(() => {
+    const emailBody = target.innerText || "";
+    if (emailBody.length > 20) {
+      console.log("[EchoFilter] Email view changed — running scan");
+      scanAndInjectWarnings();
     }
   });
+
+  observer.observe(target, {
+    childList: true,
+    subtree: true,
+  });
+
+  console.log("[EchoFilter] Gmail observer started");
 }
+
+window.addEventListener("load", () => {
+  console.log("[EchoFilter] Waiting to observe Gmail content...");
+  setTimeout(observeGmailChanges, 3000); // Give Gmail time to fully load
+});

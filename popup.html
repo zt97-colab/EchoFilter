@@ -1,23 +1,137 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>EchoFilter Alerts</title>
   <style>
-    body { font-family: Inter, sans-serif; width: 300px; padding: 10px; }
-    .email { border-bottom: 1px solid #ddd; margin-bottom: 10px; }
-    .email h4 { margin: 0 0 5px; }
-    .red { color: red; }
-    .yellow { color: orange; }
+    /* Popup background with green-blue gradient */
+    body {
+      margin: 0;
+      min-width: 320px;
+      min-height: 480px;
+      background: linear-gradient(135deg, #3aaf86, #2b7a78);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #222;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 20px 15px;
+      box-sizing: border-box;
+      user-select: none;
+    }
+    /* White container inside */
+    .container {
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
+      width: 100%;
+      max-width: 350px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      padding: 25px 30px;
+      overflow-y: auto;
+    }
+    h2 {
+      margin: 0 0 20px 0;
+      font-weight: 700;
+      color: #2b7a78;
+      text-align: center;
+      user-select: text;
+    }
+    #alerts {
+      flex-grow: 1;
+      overflow-y: auto;
+      margin-bottom: 25px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      font-size: 14px;
+      color: #444;
+      background-color: #fafafa;
+    }
+    .email {
+      border-bottom: 1px solid #ccc;
+      padding: 8px 0;
+      font-weight: 500;
+    }
+    .email:last-child {
+      border-bottom: none;
+    }
+    .email .subject {
+      font-weight: 700;
+      color: #2b7a78;
+    }
+    .email .sender {
+      font-style: italic;
+      color: #555;
+      font-size: 13px;
+      margin-top: 3px;
+    }
+    .email .reason {
+      margin-top: 4px;
+      color: #d9534f; /* bootstrap danger color */
+      font-size: 13px;
+    }
+    /* Buttons container */
+    .buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    button.toggle-btn {
+      background: #2b7a78;
+      border: none;
+      color: white;
+      padding: 12px 18px;
+      font-size: 15px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.3s ease;
+      width: 100%;
+    }
+    button.toggle-btn:hover {
+      background: #3aaf86;
+    }
+    button.toggle-btn.active {
+      background: #d9534f;
+    }
+    /* Trust known senders button style */
+    button.trust-btn {
+      background: #2196f3;
+      border: none;
+      color: white;
+      padding: 12px 18px;
+      font-size: 15px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.3s ease;
+      width: 100%;
+    }
+    button.trust-btn.active {
+      background: #0b5394;
+    }
   </style>
 </head>
 <body>
-  <h3>⚠️ EchoFilter Alerts</h3>
-  <div id="alerts"></div>
-  <h4>Settings</h4>
-  <label><input type="checkbox" id="toggleLinks" checked> Enable link checking</label><br>
-  <label><input type="checkbox" id="toggleLang" checked> Enable scam language detection</label><br>
-  <label><input type="checkbox" id="toggleWhitelist"> Trust known senders</label>
+  <div class="container">
+    <h2>⚠️ EchoFilter Alerts</h2>
+    <div id="alerts">
+      Loading alerts...
+    </div>
+
+    <div class="buttons">
+      <button id="btnLinkCheck" class="toggle-btn">Enable link checking</button>
+      <button id="btnLangDetect" class="toggle-btn">Enable scam language detection</button>
+      <button id="btnTrustSenders" class="trust-btn">Trust known senders</button>
+    </div>
+  </div>
 
   <script src="popup.js"></script>
 </body>
 </html>
-
