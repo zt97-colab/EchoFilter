@@ -1,9 +1,17 @@
 function scanAndInjectWarnings() {
+  // 🧠 BONUS: Prevent double injection
+  if (document.getElementById('ef-warning')) {
+    console.log("[EchoFilter] Warning already shown — skipping");
+    return;
+  }
+
   chrome.storage.local.get(
     ['linkCheckEnabled', 'langDetectEnabled', 'trustSendersEnabled'],
     ({ linkCheckEnabled = true, langDetectEnabled = true }) => {
       const bodyText = document.body.innerText;
-      const sender = document.querySelector('[email], .gD, .go')?.innerText || "Unknown";
+      // 🛠️ FIX #2: Log sender for debugging, fallback to document.title
+      let sender = document.querySelector('[email], .gD, .go')?.innerText || document.title || "Unknown";
+      console.log("[EchoFilter] Sender:", sender);
       const subject = document.querySelector('h2')?.innerText || "(No Subject)";
       const flagged = [];
 
@@ -15,11 +23,13 @@ function scanAndInjectWarnings() {
         ].forEach(({ p, r }) => p.test(bodyText) && flagged.push(r));
       }
 
+      // 🛠️ FIX #1: Only inject into Gmail's main content, not body
       if (flagged.length && !document.getElementById('ef-warning')) {
-        const container = document.body;
-        const original = container.cloneNode(true);
-        const warning = document.createElement('div');
+        const main = document.querySelector('div[role="main"]');
+        if (!main) return;
 
+        const original = main.cloneNode(true);
+        const warning = document.createElement('div');
         warning.id = 'ef-warning';
         warning.style.cssText = `
           background: white; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -42,12 +52,12 @@ function scanAndInjectWarnings() {
           ">See It Anyway</button>
         `;
 
-        container.innerHTML = '';
-        container.appendChild(warning);
+        main.innerHTML = '';
+        main.appendChild(warning);
 
         document.getElementById('ef-show-btn').onclick = () => {
-          container.innerHTML = '';
-          container.appendChild(original);
+          main.innerHTML = '';
+          main.appendChild(original);
         };
 
         chrome.runtime.sendMessage({
