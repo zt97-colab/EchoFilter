@@ -1,8 +1,22 @@
 function scanAndInjectWarnings() {
-  // 🧠 BONUS: Prevent double injection
-  if (document.getElementById('ef-warning')) {
-    console.log("[EchoFilter] Warning already shown — skipping");
+  // Prevent double injection
+  if (document.getElementById('ef-warning') || document.getElementById('ef-checking')) {
+    console.log("[EchoFilter] Warning or check already shown — skipping");
     return;
+  }
+
+  // Show "Checking email..." banner
+  const main = document.querySelector('div[role="main"]');
+  if (main) {
+    const checking = document.createElement('div');
+    checking.id = 'ef-checking';
+    checking.style.cssText = `
+      background: #e0e0e0; color: #333; font-size: 18px; font-weight: 500;
+      padding: 18px; border-radius: 8px; margin: 20px auto; text-align: center;
+      max-width: 400px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    `;
+    checking.innerText = "🔎 EchoFilter: Checking this email for threats...";
+    main.prepend(checking);
   }
 
   chrome.storage.local.get(
@@ -24,6 +38,10 @@ function scanAndInjectWarnings() {
       }
 
       // 🛠️ FIX #1: Only inject into Gmail's main content, not body
+      // Remove the "Checking..." banner if present
+      const checkingBanner = document.getElementById('ef-checking');
+      if (checkingBanner) checkingBanner.remove();
+
       if (flagged.length && !document.getElementById('ef-warning')) {
         const main = document.querySelector('div[role="main"]');
         if (!main) return;
@@ -64,6 +82,20 @@ function scanAndInjectWarnings() {
           action: 'logThreat',
           data: { subject, sender, reason: flagged.join(', '), threatLevel: 'red' }
         });
+      } else if (!flagged.length) {
+        // Show a "Safe" banner for a moment
+        if (main) {
+          const safe = document.createElement('div');
+          safe.id = 'ef-safe';
+          safe.style.cssText = `
+            background: #e6ffe6; color: #256029; font-size: 18px; font-weight: 500;
+            padding: 18px; border-radius: 8px; margin: 20px auto; text-align: center;
+            max-width: 400px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+          `;
+          safe.innerText = "✅ EchoFilter: No threats detected in this email.";
+          main.prepend(safe);
+          setTimeout(() => { if (safe) safe.remove(); }, 2500);
+        }
       }
 
       if (linkCheckEnabled) {
