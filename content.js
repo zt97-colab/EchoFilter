@@ -25,6 +25,8 @@ function scanAndInjectWarnings() {
   checking.innerText = "🔎 EchoFilter: Checking this email for threats...";
   main.prepend(checking);
 
+  
+
   setTimeout(() => {
     chrome.storage.local.get(
       ['linkCheckEnabled', 'langDetectEnabled', 'trustSendersEnabled', 'trustedSenders'],
@@ -113,7 +115,7 @@ function scanAndInjectWarnings() {
           chrome.storage.local.get({ alerts: [] }, data => {
             const alerts = data.alerts;
             alerts.unshift({ sender, subject, reason: flagged.join(', ') });
-            chrome.storage.local.set({ alerts: alerts.slice(0, 20) }); // Keep last 20
+            chrome.storage.local.set({ alerts: [] }); // Keep last 20
           });
         } else {
           // Show "Safe" banner
