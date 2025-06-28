@@ -3,8 +3,14 @@
   "name": "EchoFilter",
   "version": "1.0",
   "description": "Hide scammy emails and protect users from phishing",
-  "permissions": ["storage", "scripting", "activeTab"],
-  "host_permissions": ["*://mail.google.com/*"],
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://mail.google.com/*"
+  ],
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
