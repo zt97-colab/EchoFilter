@@ -1,7 +1,6 @@
 let lastScannedEmailContentSignature = null; 
 
 function scanAndInjectWarnings() {
-  
   if (document.getElementById('ef-warning')) return;
 
   const main = document.querySelector('div[role="main"]');
@@ -19,12 +18,11 @@ function scanAndInjectWarnings() {
     return;
   }
 
-  
+  // SOLO ahora mostramos el banner de “checking…”
   if (document.getElementById('ef-checking')) {
-      return;
+    return;
   }
 
-  
   const checking = document.createElement('div');
   checking.id = 'ef-checking';
   checking.style.cssText = `
@@ -36,6 +34,10 @@ function scanAndInjectWarnings() {
   checking.innerText = "🔎 EchoFilter: Checking this email for threats...";
   main.prepend(checking);
 
+
+
+  // Esperamos tantito y luego escaneamos el contenido
+
   setTimeout(() => {
     chrome.storage.local.get(
       ['linkCheckEnabled', 'langDetectEnabled', 'trustSendersEnabled', 'trustedSenders'],
@@ -43,16 +45,14 @@ function scanAndInjectWarnings() {
         const bodyText = main.innerText;
         let sender = senderEl.innerText || document.title || "Unknown";
         const subject = subjectEl.innerText || "(No Subject)";
-        const flagged = []; 
+        const flagged = [];
 
-        
         if (trustSendersEnabled && trustedSenders.includes(sender)) {
           removeEchoFilterBanners(); 
           showSafeBanner(main); 
           return; 
         }
 
-        
         if (langDetectEnabled) {
           [
             { p: /urgent: your account has been locked|immediate action required|verify your information now/i, r: "Suspicious Urgent Language" },
@@ -60,42 +60,33 @@ function scanAndInjectWarnings() {
             { p: /payment issue|outstanding invoice|unauthorized fund transfer|bitcoin investment|free digital currency/i, r: "Scam Phrases" },
             { p: /\b(?:https?:\/\/[^\s@]+\@[^\s@]+\.[^\s@]+\b)/i, r: "Email Disguised in Link" }
           ].forEach(({ p, r }) => {
-              if (p.test(bodyText) && !flagged.includes(r)) { 
-                  flagged.push(r);
-              }
+            if (p.test(bodyText) && !flagged.includes(r)) { 
+              flagged.push(r);
+            }
           });
         }
 
-        
         if (linkCheckEnabled) {
           main.querySelectorAll('a').forEach(link => {
             const text = link.innerText.trim();
             const href = link.getAttribute('href');
 
-            if (!href || href.startsWith('mailto:')) {
-                return;
-            }
-
-            
-            if (text.length < 5 && !text.includes('.')) {
-                return;
-            }
+            if (!href || href.startsWith('mailto:')) return;
+            if (text.length < 5 && !text.includes('.')) return;
 
             let hrefDomain = '';
             try {
-                const urlObj = new URL(href);
-                hrefDomain = urlObj.hostname;
+              const urlObj = new URL(href);
+              hrefDomain = urlObj.hostname;
             } catch (e) {
-                
-                if (!flagged.includes("Suspicious Link: Invalid URL")) {
-                    flagged.push("Suspicious Link: Invalid URL");
-                }
-                link.title = `⚠️ Invalid link: ${href}`;
-                link.style.borderBottom = "1px dashed red";
-                return;
+              if (!flagged.includes("Suspicious Link: Invalid URL")) {
+                flagged.push("Suspicious Link: Invalid URL");
+              }
+              link.title = `⚠️ Invalid link: ${href}`;
+              link.style.borderBottom = "1px dashed red";
+              return;
             }
 
-            
             if (!href.includes(text) && !text.includes(hrefDomain) && text.length > 5) {
               if (!flagged.includes("Suspicious Link: Text Mismatch with URL")) {
                 flagged.push("Suspicious Link: Text Mismatch with URL");
@@ -106,11 +97,9 @@ function scanAndInjectWarnings() {
           });
         }
 
-        
         removeEchoFilterBanners();
 
         if (flagged.length) {
-          
           const warning = document.createElement('div');
           warning.id = 'ef-warning';
           warning.style.cssText = `
@@ -120,7 +109,6 @@ function scanAndInjectWarnings() {
             display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
           `;
 
-          
           const reasons = {
             "Suspicious Urgent Language": "This email uses urgent or alarming language, which is common in scams.",
             "Suspicious Keywords": "This email contains keywords often used in phishing or scam attempts.",
@@ -145,20 +133,26 @@ function scanAndInjectWarnings() {
               cursor: pointer; user-select: none;
             ">See It Anyway</button>
           `;
-          document.body.appendChild(warning); 
+          document.body.appendChild(warning);
 
           document.getElementById('ef-show-btn').onclick = () => {
             warning.remove(); 
           };
+
 
           // Log to storage for popup
           chrome.storage.local.get({ alerts: [] }, data => {
             const alerts = data.alerts;
             alerts.unshift({ sender, subject, reason: flagged.join(', ') });
             chrome.storage.local.set({ alerts: alerts.slice(0, 20) }); // Keep last 20
+
+          chrome.runtime.sendMessage({
+            action: 'logThreat',
+            data: { subject, sender, reason: flagged.join(', '), threatLevel: 'red' }
+          }).catch(error => {
+            console.error("[EchoFilter Content] Error sending message to background:", error);
           });
         } else {
-          
           showSafeBanner(main);
         }
       }
